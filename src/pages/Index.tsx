@@ -7,6 +7,7 @@ import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { ScenePreview } from "@/components/ScenePreview";
 import { GuidedTour } from "@/components/GuidedTour";
 import { SceneFilters } from "@/components/SceneFilters";
+import { SceneElementsList } from "@/components/SceneElementsList";
 import { Shield, Brain, Eye, Sparkles, HelpCircle, Menu, X } from "lucide-react";
 import { generatePdf } from "@/lib/generatePdf";
 import { Button } from "@/components/ui/button";
@@ -456,6 +457,7 @@ const Index = () => {
               ) : sceneData ? (
                 <div ref={visualizationRef}>
                   <CrimeSceneVisualization data={sceneData} activeFilters={activeFilters} />
+                  <SceneElementsList elements={sceneData.elementos} />
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-96">

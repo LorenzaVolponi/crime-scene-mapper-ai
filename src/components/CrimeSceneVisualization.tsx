@@ -324,28 +324,6 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
             );
           })}
         </svg>
-
-        {/* Enhanced Legend */}
-        <div className="absolute bottom-6 left-6 bg-slate-900/80 backdrop-blur-xl rounded-xl p-4 border border-slate-600/50 shadow-2xl max-w-xs">
-          <h4 className="text-white text-sm font-bold mb-3 flex items-center space-x-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-            <span>Elementos Identificados</span>
-          </h4>
-          <div className="space-y-2 text-xs max-h-32 overflow-y-auto">
-            {sortedElements.map((elemento, index) => (
-              <div key={index} className="flex items-center space-x-3 py-1">
-                <div
-                  className="w-3 h-3 rounded-full shadow-sm"
-                  style={{ backgroundColor: elemento.cor }}
-                />
-                <span className="text-slate-300 font-medium flex-1">{elemento.nome}</span>
-                <span className="text-slate-500 text-xs capitalize">{elemento.tipo}</span>
-                <span className="text-slate-500 text-xs ml-2">{elemento.classificacao}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Enhanced Status Panel */}
         <div className="absolute top-6 right-6 bg-slate-900/80 backdrop-blur-xl rounded-xl p-4 border border-slate-600/50 shadow-2xl">
           <div className="text-right space-y-1">
