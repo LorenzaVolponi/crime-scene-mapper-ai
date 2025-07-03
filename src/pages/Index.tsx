@@ -45,6 +45,7 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const visualizationRef = useRef<HTMLDivElement>(null);
+  const narratorRef = useRef<{ speak: () => void }>(null);
 
   const handleSceneGeneration = async (description: string) => {
     setIsLoading(true);
@@ -161,11 +162,16 @@ const Index = () => {
 
     // Generate narrative
     if (elementos.length > 0) {
-      narrativa = `Análise forense identificou ${elementos.length} elementos principais na cena. `;
-      elementos.forEach((elemento, index) => {
-        narrativa += `${elemento.nome} localizado em posição estratégica${index < elementos.length - 1 ? ', ' : '. '}`;
-      });
-      narrativa += `As evidências sugerem um padrão investigativo que requer análise detalhada.`;
+      const nomes = elementos.map((e) => e.nome.toLowerCase()).join(', ');
+      narrativa = `Foram identificados ${elementos.length} pontos relevantes: ${nomes}. `;
+
+      if (conexoes.length > 0) {
+        narrativa += `As ligações observadas entre os elementos indicam dinâmica provável do ocorrido.`;
+      } else {
+        narrativa += `Nenhuma relação direta clara foi detectada entre os elementos mapeados.`;
+      }
+
+      narrativa += ` A descrição sugere verificar vestígios complementares para concluir a reconstituição.`;
     } else {
       narrativa = "Descrição insuficiente para análise forense. Favor fornecer mais detalhes sobre a cena.";
       titulo = "Análise Inconclusiva";
@@ -320,7 +326,7 @@ const Index = () => {
                 </div>
                 <div className="space-y-4">
                   <p className="text-slate-300 leading-relaxed text-lg">{sceneData.narrativa}</p>
-                  <VoiceNarrator text={sceneData.narrativa} />
+                  <VoiceNarrator ref={narratorRef} text={sceneData.narrativa} autoPlay />
                 </div>
               </div>
             )}
@@ -348,6 +354,7 @@ const Index = () => {
                       onClick={() => {
                         if (sceneData && visualizationRef.current) {
                           generatePdf(sceneData, visualizationRef.current);
+                          narratorRef.current?.speak();
                         }
                       }}
                       className="text-blue-400 border-blue-400 hover:bg-blue-500/10"

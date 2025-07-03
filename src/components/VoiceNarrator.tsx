@@ -1,14 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, Play, Pause, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 interface VoiceNarratorProps {
   text: string;
+  autoPlay?: boolean;
 }
 
-export const VoiceNarrator = ({ text }: VoiceNarratorProps) => {
+export const VoiceNarrator = forwardRef<{ speak: () => void }, VoiceNarratorProps>(
+  ({ text, autoPlay }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
@@ -95,6 +97,16 @@ export const VoiceNarrator = ({ text }: VoiceNarratorProps) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  useImperativeHandle(ref, () => ({
+    speak: speakText
+  }));
+
+  useEffect(() => {
+    if (autoPlay) {
+      speakText();
+    }
+  }, [text, autoPlay]);
+
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (isPlaying && currentUtterance) {
@@ -178,4 +190,4 @@ export const VoiceNarrator = ({ text }: VoiceNarratorProps) => {
       </div>
     </div>
   );
-};
+});

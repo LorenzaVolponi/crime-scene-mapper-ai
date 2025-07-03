@@ -19,6 +19,11 @@ export async function generatePdf(scene: CrimeSceneData, element: HTMLElement) {
     { align: "center" }
   );
   y += 24;
+  pdf.setFontSize(14);
+  pdf.text(scene.titulo || "Relatório de Cena", pageWidth / 2, y, {
+    align: "center",
+  });
+  y += 20;
   pdf.setFontSize(12);
   pdf.text("Gerado por IA – Sistema Aussy Scene", pageWidth / 2, y, {
     align: "center",
