@@ -220,16 +220,30 @@ const Index = () => {
     }
 
     if (elementos.length > 0) {
-      const nomes = elementos.map((e) => e.nome.toLowerCase()).join(", ");
-      narrativa = `Foram identificados ${elementos.length} elementos-chave: ${nomes}. `;
+      const detalhesElementos = elementos
+        .map(
+          (e) =>
+            `${e.nome} (${e.classificacao}) em (${Math.round(e.posicao[0])}, ${Math.round(
+              e.posicao[1]
+            )})`
+        )
+        .join("; ");
+
+      narrativa = `Foram identificados ${elementos.length} elementos: ${detalhesElementos}. `;
+
       if (conexoes.length > 0) {
-        narrativa += `As conexões traçadas sugerem uma possível sequência dos fatos.`;
+        const detalhesConexoes = conexoes
+          .map((c) => `${c.de} → ${c.para} (${c.descricao})`)
+          .join("; ");
+        narrativa += `Foram mapeadas ${conexoes.length} conexões: ${detalhesConexoes}.`;
       } else {
-        narrativa += `Não foram encontradas relações explícitas entre os pontos mapeados.`;
+        narrativa += `Nenhuma relação direta foi encontrada entre os elementos.`;
       }
-      narrativa += ` Reavalie a cena para detalhes adicionais se necessário.`;
+
+      narrativa += " Esses dados subsidiam uma reconstituição visual precisa da cena.";
     } else {
-      narrativa = "Descrição insuficiente para análise forense. Favor fornecer mais detalhes sobre a cena.";
+      narrativa =
+        "Descrição insuficiente para análise forense. Favor fornecer mais detalhes sobre a cena.";
       titulo = "Análise Inconclusiva";
     }
 
@@ -388,7 +402,7 @@ const Index = () => {
                 </div>
                 <div className="space-y-4">
                   <p className="text-slate-300 leading-relaxed text-lg">{sceneData.narrativa}</p>
-                  <VoiceNarrator ref={narratorRef} text={sceneData.narrativa} autoPlay />
+                  <VoiceNarrator ref={narratorRef} text={sceneData.narrativa} />
                 </div>
               </div>
             )}
@@ -416,7 +430,6 @@ const Index = () => {
                       onClick={() => {
                         if (sceneData && visualizationRef.current) {
                           generatePdf(sceneData, visualizationRef.current);
-                          narratorRef.current?.speak();
                         }
                       }}
                       className="text-blue-400 border-blue-400 hover:bg-blue-500/10"
