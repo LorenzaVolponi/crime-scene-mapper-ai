@@ -48,6 +48,23 @@ const Index = () => {
   const visualizationRef = useRef<HTMLDivElement>(null);
   const narratorRef = useRef<{ speak: () => void }>(null);
 
+  // Close mobile menu on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
   const handleSceneGeneration = async (description: string) => {
     setIsLoading(true);
     setSceneData(null);
@@ -290,8 +307,14 @@ const Index = () => {
       </header>
 
       {mobileMenuOpen && (
-        <div className="sm:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex justify-end">
-          <div className="relative bg-slate-900 w-64 p-6 space-y-6">
+        <div
+          className="sm:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex justify-end"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            className="relative bg-slate-900 w-64 p-6 space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
