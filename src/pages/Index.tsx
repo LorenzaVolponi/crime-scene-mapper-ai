@@ -3,7 +3,8 @@ import { useState } from "react";
 import { CrimeSceneForm } from "@/components/CrimeSceneForm";
 import { CrimeSceneVisualization } from "@/components/CrimeSceneVisualization";
 import { VoiceNarrator } from "@/components/VoiceNarrator";
-import { Shield, Brain, Eye } from "lucide-react";
+import { LoadingAnimation } from "@/components/LoadingAnimation";
+import { Shield, Brain, Eye, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export interface SceneElement {
@@ -32,29 +33,43 @@ export interface CrimeSceneData {
 const Index = () => {
   const [sceneData, setSceneData] = useState<CrimeSceneData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [processingStage, setProcessingStage] = useState("");
 
   const handleSceneGeneration = async (description: string) => {
     setIsLoading(true);
-    console.log("Gerando cena para descrição:", description);
+    setSceneData(null);
     
     try {
-      // Simulate AI processing with realistic delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulate AI cognitive processing stages
+      setProcessingStage("Analisando descrição...");
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      setProcessingStage("Identificando elementos...");
+      await new Promise(resolve => setTimeout(resolve, 700));
+      
+      setProcessingStage("Mapeando conexões...");
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setProcessingStage("Construindo visualização...");
+      await new Promise(resolve => setTimeout(resolve, 400));
       
       const generatedScene = interpretCrimeScene(description);
       setSceneData(generatedScene);
       
-      toast.success("Cena criminal mapeada com sucesso!", {
-        description: `${generatedScene.elementos.length} elementos identificados`
+      toast.success("Reconstituição forense concluída", {
+        description: `${generatedScene.elementos.length} elementos identificados com precisão`,
+        duration: 4000,
       });
       
     } catch (error) {
-      console.error("Erro ao gerar cena:", error);
-      toast.error("Erro ao processar a descrição", {
-        description: "Tente novamente com uma descrição mais detalhada"
+      console.error("Erro ao processar cena:", error);
+      toast.error("Falha na análise forense", {
+        description: "Tente reformular a descrição com mais detalhes específicos",
+        duration: 5000,
       });
     } finally {
       setIsLoading(false);
+      setProcessingStage("");
     }
   };
 
@@ -127,26 +142,51 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
+      {/* Ambient Background Effects */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      {/* Neural Network Background */}
+      <div className="absolute inset-0 opacity-5">
+        <svg className="w-full h-full" viewBox="0 0 1000 1000">
+          <defs>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+      </div>
+
       {/* Header */}
-      <header className="bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="relative z-10 bg-slate-900/70 backdrop-blur-xl border-b border-slate-700/50 sticky top-0">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Shield className="h-8 w-8 text-blue-400" />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Shield className="h-10 w-10 text-blue-400 drop-shadow-lg" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping opacity-75"></div>
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Crime Scene Mapper AI</h1>
-                <p className="text-slate-300 text-sm">Análise Forense Inteligente</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-100 to-slate-300 bg-clip-text text-transparent">
+                  Crime Scene Mapper AI
+                </h1>
+                <p className="text-slate-400 text-sm font-medium tracking-wide">
+                  Reconstituição Forense Inteligente • Versão Beta
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-4 text-slate-300">
-              <div className="flex items-center space-x-2">
-                <Brain className="h-5 w-5" />
-                <span className="text-sm">IA Ativa</span>
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2 px-3 py-2 bg-green-500/10 rounded-full border border-green-500/20">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-300 text-sm font-medium">Sistema Ativo</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Eye className="h-5 w-5" />
-                <span className="text-sm">Visualização 2D</span>
+              <div className="flex items-center space-x-2 text-slate-300">
+                <Sparkles className="h-5 w-5 text-purple-400" />
+                <span className="text-sm font-medium">IA Avançada</span>
               </div>
             </div>
           </div>
@@ -154,50 +194,80 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Panel - Input Form */}
-          <div className="space-y-6">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center space-x-2">
-                <Brain className="h-5 w-5 text-blue-400" />
-                <span>Descrição da Cena</span>
-              </h2>
-              <CrimeSceneForm onSubmit={handleSceneGeneration} isLoading={isLoading} />
+      <main className="relative z-10 container mx-auto px-6 py-12">
+        <div className="grid xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
+          {/* Left Panel */}
+          <div className="space-y-8">
+            <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/30 shadow-2xl">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Brain className="h-6 w-6 text-blue-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">Análise Forense</h2>
+              </div>
+              
+              {isLoading ? (
+                <LoadingAnimation stage={processingStage} />
+              ) : (
+                <CrimeSceneForm onSubmit={handleSceneGeneration} isLoading={isLoading} />
+              )}
             </div>
 
             {sceneData && (
-              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-                <h3 className="text-lg font-semibold text-white mb-3">Narrativa Forense</h3>
-                <p className="text-slate-300 leading-relaxed mb-4">{sceneData.narrativa}</p>
-                <VoiceNarrator text={sceneData.narrativa} />
+              <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/30 shadow-2xl animate-in slide-in-from-bottom-8 duration-700">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="p-2 bg-purple-500/10 rounded-lg">
+                    <Eye className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Narrativa Forense</h3>
+                </div>
+                <div className="space-y-4">
+                  <p className="text-slate-300 leading-relaxed text-lg">{sceneData.narrativa}</p>
+                  <VoiceNarrator text={sceneData.narrativa} />
+                </div>
               </div>
             )}
           </div>
 
-          {/* Right Panel - Visualization */}
-          <div className="space-y-6">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700 min-h-[500px]">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center space-x-2">
-                <Eye className="h-5 w-5 text-blue-400" />
-                <span>Mapa da Cena</span>
-              </h2>
+          {/* Right Panel */}
+          <div className="space-y-8">
+            <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/30 shadow-2xl min-h-[600px]">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <Eye className="h-6 w-6 text-green-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">Reconstituição Visual</h2>
+                </div>
+                {sceneData && (
+                  <div className="text-right text-sm text-slate-400">
+                    <p className="font-medium">{sceneData.elementos.length} elementos</p>
+                    <p>{sceneData.conexoes.length} conexões</p>
+                  </div>
+                )}
+              </div>
               
               {isLoading ? (
                 <div className="flex items-center justify-center h-96">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
-                    <p className="text-slate-300">Analisando cena criminal...</p>
-                  </div>
+                  <LoadingAnimation stage={processingStage} />
                 </div>
               ) : sceneData ? (
                 <CrimeSceneVisualization data={sceneData} />
               ) : (
                 <div className="flex items-center justify-center h-96">
-                  <div className="text-center text-slate-400">
-                    <Shield className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p>Aguardando descrição da cena...</p>
-                    <p className="text-sm mt-2">Digite os detalhes para gerar a visualização</p>
+                  <div className="text-center">
+                    <div className="relative mb-8">
+                      <Shield className="h-24 w-24 mx-auto text-slate-600 opacity-50" />
+                      <div className="absolute inset-0 animate-ping">
+                        <Shield className="h-24 w-24 mx-auto text-blue-400 opacity-20" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-300 mb-2">
+                      Aguardando Análise
+                    </h3>
+                    <p className="text-slate-500 max-w-md mx-auto">
+                      Descreva a cena criminal para iniciar a reconstituição forense inteligente
+                    </p>
                   </div>
                 </div>
               )}
@@ -207,9 +277,17 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-800/80 backdrop-blur-sm border-t border-slate-700 mt-16">
-        <div className="container mx-auto px-4 py-6 text-center text-slate-400">
-          <p>&copy; 2025 Crime Scene Mapper AI - Tecnologia Forense Avançada</p>
+      <footer className="relative z-10 bg-slate-900/50 backdrop-blur-xl border-t border-slate-700/30 mt-20">
+        <div className="container mx-auto px-6 py-8 text-center">
+          <div className="flex items-center justify-center space-x-2 text-slate-400 mb-4">
+            <Shield className="h-5 w-5" />
+            <span className="font-medium">Crime Scene Mapper AI</span>
+            <span>•</span>
+            <span>Tecnologia Forense Avançada</span>
+          </div>
+          <p className="text-slate-500 text-sm">
+            © 2025 - Sistema de Reconstituição Forense com Inteligência Artificial
+          </p>
         </div>
       </footer>
     </div>
