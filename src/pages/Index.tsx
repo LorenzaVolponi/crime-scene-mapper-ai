@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CrimeSceneForm } from "@/components/CrimeSceneForm";
 import { CrimeSceneVisualization } from "@/components/CrimeSceneVisualization";
 import { VoiceNarrator } from "@/components/VoiceNarrator";
@@ -11,6 +11,7 @@ import { Shield, Brain, Eye, Sparkles, HelpCircle, Menu, X } from "lucide-react"
 import { generatePdf } from "@/lib/generatePdf";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 export interface SceneElement {
   nome: string;
@@ -47,6 +48,7 @@ const Index = () => {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const visualizationRef = useRef<HTMLDivElement>(null);
   const narratorRef = useRef<{ speak: () => void }>(null);
+  useLockBodyScroll(mobileMenuOpen);
 
   // Close mobile menu on Escape key press
   useEffect(() => {
