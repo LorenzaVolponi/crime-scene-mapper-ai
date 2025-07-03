@@ -53,7 +53,7 @@ export const InputMethodSelector = ({ onMethodSelect, selectedMethod }: InputMet
         <p className="text-slate-400">Escolha o método de entrada mais adequado para sua situação</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
         {methods.map((method) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;

@@ -63,7 +63,7 @@ export const CrimeSceneForm = ({ onSubmit, isLoading }: CrimeSceneFormProps) => 
     setDescription(`Análise de imagem (Confiança: ${Math.round(confidence * 100)}%): ${imageDescription}`);
   };
 
-  const useExample = (example: string) => {
+  const applyExample = (example: string) => {
     setDescription(example);
     setError("");
     setShowExamples(false);
@@ -144,7 +144,7 @@ export const CrimeSceneForm = ({ onSubmit, isLoading }: CrimeSceneFormProps) => 
                   <button
                     key={index}
                     type="button"
-                    onClick={() => useExample(example)}
+                    onClick={() => applyExample(example)}
                     className="w-full text-left p-4 bg-gradient-to-r from-slate-800/30 to-slate-700/30 hover:from-slate-700/50 hover:to-slate-600/50 rounded-xl border border-slate-600/30 hover:border-slate-500/50 transition-all duration-300 group"
                     disabled={isLoading}
                   >

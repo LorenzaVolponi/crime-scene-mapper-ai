@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { CrimeSceneForm } from "@/components/CrimeSceneForm";
 import { CrimeSceneVisualization } from "@/components/CrimeSceneVisualization";
 import { VoiceNarrator } from "@/components/VoiceNarrator";
@@ -7,7 +7,8 @@ import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { ScenePreview } from "@/components/ScenePreview";
 import { GuidedTour } from "@/components/GuidedTour";
 import { SceneFilters } from "@/components/SceneFilters";
-import { Shield, Brain, Eye, Sparkles, HelpCircle } from "lucide-react";
+import { Shield, Brain, Eye, Sparkles, HelpCircle, Menu, X } from "lucide-react";
+import { generatePdf } from "@/lib/generatePdf";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -41,7 +42,9 @@ const Index = () => {
   const [processingStage, setProcessingStage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const visualizationRef = useRef<HTMLDivElement>(null);
 
   const handleSceneGeneration = async (description: string) => {
     setIsLoading(true);
@@ -197,7 +200,7 @@ const Index = () => {
       {/* Enhanced Header */}
       <header className="relative z-10 bg-slate-900/70 backdrop-blur-xl border-b border-slate-700/50 sticky top-0">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Shield className="h-10 w-10 text-blue-400 drop-shadow-lg" />
@@ -212,7 +215,7 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="hidden sm:flex items-center space-x-6">
               <Button
                 variant="ghost"
                 size="sm"
@@ -231,12 +234,52 @@ const Index = () => {
                 <span className="text-sm font-medium">IA Avançada</span>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(true)}
+              className="sm:hidden text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
 
+      {mobileMenuOpen && (
+        <div className="sm:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex justify-end">
+          <div className="relative bg-slate-900 w-64 p-6 space-y-6">
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <Button
+              variant="ghost"
+              className="justify-start text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 w-full"
+              onClick={() => {
+                setShowTour(true);
+                setMobileMenuOpen(false);
+              }}
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Como usar
+            </Button>
+            <div className="flex items-center space-x-2 px-3 py-2 bg-green-500/10 rounded-full border border-green-500/20">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-green-300 text-sm font-medium">Sistema Ativo</span>
+            </div>
+            <div className="flex items-center space-x-2 text-slate-300">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+              <span className="text-sm font-medium">IA Avançada</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="relative z-10 container mx-auto px-6 py-12">
+      <main className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
           {/* Left Panel */}
           <div className="space-y-8">
@@ -286,7 +329,7 @@ const Index = () => {
           {/* Right Panel */}
           <div className="space-y-8">
             <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/30 shadow-2xl min-h-[600px]">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-green-500/10 rounded-lg">
                     <Eye className="h-6 w-6 text-green-400" />
@@ -294,9 +337,23 @@ const Index = () => {
                   <h2 className="text-2xl font-bold text-white">Reconstituição Visual</h2>
                 </div>
                 {sceneData && (
-                  <div className="text-right text-sm text-slate-400">
-                    <p className="font-medium">{sceneData.elementos.length} elementos</p>
-                    <p>{sceneData.conexoes.length} conexões</p>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right text-sm text-slate-400">
+                      <p className="font-medium">{sceneData.elementos.length} elementos</p>
+                      <p>{sceneData.conexoes.length} conexões</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (sceneData && visualizationRef.current) {
+                          generatePdf(sceneData, visualizationRef.current);
+                        }
+                      }}
+                      className="text-blue-400 border-blue-400 hover:bg-blue-500/10"
+                    >
+                      Baixar PDF
+                    </Button>
                   </div>
                 )}
               </div>
@@ -313,7 +370,9 @@ const Index = () => {
                   <LoadingAnimation stage={processingStage} />
                 </div>
               ) : sceneData ? (
-                <CrimeSceneVisualization data={sceneData} activeFilters={activeFilters} />
+                <div ref={visualizationRef}>
+                  <CrimeSceneVisualization data={sceneData} activeFilters={activeFilters} />
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-96">
                   <div className="text-center">
