@@ -83,18 +83,21 @@ export const DocumentUploader = ({ onDocumentProcessed, isProcessing }: Document
       : 'Análise em andamento - elementos serão mapeados na visualização';
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    const file = files[0];
-    
-    if (file && validateFile(file)) {
-      setUploadedFile(file);
-      processFile(file);
-    }
-  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      const file = files[0];
+
+      if (file && validateFile(file)) {
+        setUploadedFile(file);
+        processFile(file);
+      }
+    },
+    [validateFile, processFile]
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

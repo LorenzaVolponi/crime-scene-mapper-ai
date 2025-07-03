@@ -30,13 +30,13 @@ export const CrimeSceneForm = ({ onSubmit, isLoading }: CrimeSceneFormProps) => 
 
   // Typewriter effect for examples
   useEffect(() => {
-    if (selectedMethod === 'text' && !description) {
+    if (selectedMethod === "text" && !description) {
       const interval = setInterval(() => {
         setCurrentExample((prev) => (prev + 1) % exampleDescriptions.length);
       }, 4000);
       return () => clearInterval(interval);
     }
-  }, [selectedMethod, description]);
+  }, [selectedMethod, description, exampleDescriptions.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

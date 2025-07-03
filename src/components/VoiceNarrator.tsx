@@ -105,7 +105,7 @@ export const VoiceNarrator = forwardRef<{ speak: () => void }, VoiceNarratorProp
     if (autoPlay) {
       speakText();
     }
-  }, [text, autoPlay]);
+  }, [text, autoPlay, speakText]);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
