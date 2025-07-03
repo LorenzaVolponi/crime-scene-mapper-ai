@@ -50,7 +50,7 @@ export async function generatePdf(scene: CrimeSceneData, element: HTMLElement) {
   scene.elementos.forEach((el) => {
     const pos = `(${Math.round(el.posicao[0])}, ${Math.round(el.posicao[1])})`;
     pdf.circle(margin + 2, y - 4, 2, "F");
-    pdf.text(`${el.nome} - ${el.tipo} ${pos}`, margin + 8, y);
+    pdf.text(`${el.nome} - ${el.tipo} - ${el.classificacao} ${pos}`, margin + 8, y);
     y += 14;
   });
 

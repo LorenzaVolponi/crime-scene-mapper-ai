@@ -278,9 +278,10 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
                   <div className="p-2">
                     <p className="font-bold text-white text-base mb-1">{elemento.nome}</p>
                     <p className="text-slate-300 text-sm leading-relaxed">{elemento.tooltip}</p>
+                    <p className="text-slate-400 text-xs mt-1">{elemento.classificacao}</p>
                     <div className="flex items-center mt-2 pt-2 border-t border-slate-700">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
+                      <div
+                        className="w-3 h-3 rounded-full mr-2"
                         style={{ backgroundColor: elemento.cor }}
                       />
                       <span className="text-xs text-slate-400 capitalize">{elemento.tipo}</span>
@@ -307,6 +308,7 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
                 />
                 <span className="text-slate-300 font-medium flex-1">{elemento.nome}</span>
                 <span className="text-slate-500 text-xs capitalize">{elemento.tipo}</span>
+                <span className="text-slate-500 text-xs ml-2">{elemento.classificacao}</span>
               </div>
             ))}
           </div>

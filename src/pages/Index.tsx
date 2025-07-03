@@ -18,6 +18,7 @@ export interface SceneElement {
   posicao: [number, number];
   tooltip: string;
   tipo: string;
+  classificacao: string;
   icone: string;
 }
 
@@ -137,6 +138,13 @@ const Index = () => {
       oeste: [150, 250]
     };
 
+    const classifyElement = (tipo: string): string => {
+      if (["corpo", "arma"].includes(tipo)) return "Evidência principal";
+      if (tipo === "acesso") return "Rota de fuga sugerida";
+      if (["sangue", "pegada"].includes(tipo)) return "Ponto de rastro";
+      return "Evidência complementar";
+    };
+
     patterns.forEach((pattern) => {
       if (pattern.keywords.some((k) => text.includes(k))) {
         let pos: [number, number] = [Math.random() * 300 + 200, Math.random() * 200 + 150];
@@ -148,12 +156,18 @@ const Index = () => {
           }
         });
 
+        let classificacao = classifyElement(pattern.tipo);
+        if (["corpo", "arma"].includes(pattern.tipo) && ["disparo", "tiro", "confronto", "luta"].some(k => text.includes(k))) {
+          classificacao = "Ponto crítico de confronto";
+        }
+
         elementos.push({
           nome: pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1),
           cor: pattern.cor,
           posicao: pos,
           tooltip,
           tipo: pattern.tipo,
+          classificacao,
           icone: pattern.icone
         });
       }
