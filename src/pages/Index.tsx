@@ -315,6 +315,7 @@ const Index = () => {
               size="icon"
               onClick={() => setMobileMenuOpen(true)}
               className="sm:hidden text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+              aria-label="Abrir menu"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -334,6 +335,7 @@ const Index = () => {
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              aria-label="Fechar menu"
             >
               <X className="h-5 w-5" />
             </button>

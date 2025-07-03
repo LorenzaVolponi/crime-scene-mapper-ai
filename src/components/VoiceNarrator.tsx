@@ -1,5 +1,5 @@
 
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, Play, Pause, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ export const VoiceNarrator = forwardRef<{ speak: () => void }, VoiceNarratorProp
   const [isMuted, setIsMuted] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
 
-  const speakText = () => {
+  const speakText = useCallback(() => {
     if (!('speechSynthesis' in window)) {
       toast.error("Narração por voz não suportada neste navegador", {
         description: "Use Chrome, Firefox ou Safari para melhor compatibilidade"
@@ -95,7 +95,7 @@ export const VoiceNarrator = forwardRef<{ speak: () => void }, VoiceNarratorProp
     };
 
     window.speechSynthesis.speak(utterance);
-  };
+  }, [text, isMuted, isPlaying, currentUtterance]);
 
   useImperativeHandle(ref, () => ({
     speak: speakText
@@ -191,3 +191,5 @@ export const VoiceNarrator = forwardRef<{ speak: () => void }, VoiceNarratorProp
     </div>
   );
 });
+
+VoiceNarrator.displayName = "VoiceNarrator";
