@@ -133,7 +133,7 @@ export const DocumentUploader = ({ onDocumentProcessed, isProcessing }: Document
       {/* Upload Area */}
       <div
         className={`
-          relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300
+          relative border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all duration-300
           ${isDragOver 
             ? 'border-blue-400 bg-blue-500/10' 
             : uploadedFile 

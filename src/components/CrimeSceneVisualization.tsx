@@ -57,7 +57,7 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
 
   return (
     <TooltipProvider>
-      <div className="relative w-full h-[500px] bg-gradient-to-br from-slate-900/60 to-slate-800/60 rounded-2xl border border-slate-700/40 overflow-hidden backdrop-blur-sm">
+      <div className="relative w-full h-[350px] md:h-[500px] bg-gradient-to-br from-slate-900/60 to-slate-800/60 rounded-2xl border border-slate-700/40 overflow-hidden backdrop-blur-sm">
         {/* Enhanced Grid Background */}
         <div 
           className="absolute inset-0 opacity-15"
