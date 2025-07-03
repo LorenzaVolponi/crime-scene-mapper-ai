@@ -108,70 +108,93 @@ const Index = () => {
   };
 
   const interpretCrimeScene = (description: string): CrimeSceneData => {
-    // Advanced scene interpretation logic
     const elementos: SceneElement[] = [];
     const conexoes: SceneConnection[] = [];
     let narrativa = "";
     let titulo = "Cena Criminal Analisada";
 
-    // Normalize text
     const text = description.toLowerCase();
-    
-    // Element detection patterns
+
     const patterns = [
-      { keywords: ['corpo', 'cadáver', 'vítima', 'morto'], tipo: 'corpo', cor: '#1e90ff', icone: 'user' },
-      { keywords: ['arma', 'pistola', 'revólver', 'faca', 'facão'], tipo: 'arma', cor: '#dc143c', icone: 'zap' },
-      { keywords: ['sangue', 'mancha', 'poça'], tipo: 'sangue', cor: '#8b0000', icone: 'droplet' },
-      { keywords: ['pegada', 'pisada', 'rastro'], tipo: 'pegada', cor: '#8b4513', icone: 'footprints' },
-      { keywords: ['porta', 'janela', 'entrada'], tipo: 'acesso', cor: '#4a5568', icone: 'door' },
-      { keywords: ['mesa', 'cadeira', 'sofá', 'móvel'], tipo: 'mobilia', cor: '#2d3748', icone: 'box' },
-      { keywords: ['cozinha', 'banheiro', 'quarto', 'sala'], tipo: 'comodo', cor: '#4a5568', icone: 'home' }
+      { keywords: ["corpo", "cadáver", "vítima", "morto"], tipo: "corpo", cor: "#1e90ff", icone: "user" },
+      { keywords: ["arma", "pistola", "revólver", "faca", "facão"], tipo: "arma", cor: "#dc143c", icone: "zap" },
+      { keywords: ["sangue", "mancha", "poça"], tipo: "sangue", cor: "#8b0000", icone: "droplet" },
+      { keywords: ["pegada", "pisada", "rastro"], tipo: "pegada", cor: "#8b4513", icone: "footprints" },
+      { keywords: ["porta", "janela", "entrada"], tipo: "acesso", cor: "#4a5568", icone: "door" },
+      { keywords: ["mesa", "cadeira", "sofá", "móvel"], tipo: "mobilia", cor: "#2d3748", icone: "box" },
+      { keywords: ["cozinha", "banheiro", "quarto", "sala"], tipo: "comodo", cor: "#4a5568", icone: "home" }
     ];
 
-    // Generate elements based on text analysis
-    patterns.forEach((pattern, index) => {
-      const found = pattern.keywords.some(keyword => text.includes(keyword));
-      if (found) {
-        const baseX = Math.random() * 400 + 100;
-        const baseY = Math.random() * 300 + 100;
-        
+    const directions: Record<string, [number, number]> = {
+      esquerda: [150, 250],
+      direita: [550, 250],
+      centro: [350, 250],
+      frente: [350, 150],
+      atras: [350, 400],
+      norte: [350, 150],
+      sul: [350, 400],
+      leste: [550, 250],
+      oeste: [150, 250]
+    };
+
+    patterns.forEach((pattern) => {
+      if (pattern.keywords.some((k) => text.includes(k))) {
+        let pos: [number, number] = [Math.random() * 300 + 200, Math.random() * 200 + 150];
+        let tooltip = `${pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1)} identificado`;
+        Object.entries(directions).forEach(([dir, coords]) => {
+          if (text.includes(`${dir} ${pattern.tipo}`) || text.includes(`${pattern.tipo} ${dir}`)) {
+            pos = coords;
+            tooltip += ` na região ${dir}`;
+          }
+        });
+
         elementos.push({
           nome: pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1),
           cor: pattern.cor,
-          posicao: [baseX, baseY],
-          tooltip: `${pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1)} encontrado na cena`,
+          posicao: pos,
+          tooltip,
           tipo: pattern.tipo,
           icone: pattern.icone
         });
       }
     });
 
-    // Generate connections based on spatial relationships
-    if (elementos.length > 1) {
-      for (let i = 0; i < elementos.length - 1; i++) {
-        if (Math.random() > 0.5) { // 50% chance of connection
-          conexoes.push({
-            de: elementos[i].nome,
-            para: elementos[i + 1].nome,
-            cor: '#ff4500',
-            descricao: `Relação espacial entre ${elementos[i].nome} e ${elementos[i + 1].nome}`
-          });
+    const connectionRules = [
+      { trigger: ["disparo", "tiro"], from: "arma", to: "corpo", desc: "trajetória provável do disparo" },
+      { trigger: ["rastro", "pegada"], from: "corpo", to: "acesso", desc: "possível rota de fuga" },
+      { trigger: ["sangue", "mancha"], from: "corpo", to: "sangue", desc: "aproximação de vestígios sanguíneos" }
+    ];
+
+    connectionRules.forEach((rule) => {
+      if (rule.trigger.some((k) => text.includes(k))) {
+        const origem = elementos.find((e) => e.tipo === rule.from);
+        const destino = elementos.find((e) => e.tipo === rule.to);
+        if (origem && destino) {
+          conexoes.push({ de: origem.nome, para: destino.nome, cor: "#ff4500", descricao: rule.desc });
         }
+      }
+    });
+
+    if (conexoes.length === 0 && elementos.length > 1) {
+      for (let i = 0; i < elementos.length - 1; i++) {
+        conexoes.push({
+          de: elementos[i].nome,
+          para: elementos[i + 1].nome,
+          cor: "#ff4500",
+          descricao: `Ligação observada entre ${elementos[i].nome} e ${elementos[i + 1].nome}`
+        });
       }
     }
 
-    // Generate narrative
     if (elementos.length > 0) {
-      const nomes = elementos.map((e) => e.nome.toLowerCase()).join(', ');
-      narrativa = `Foram identificados ${elementos.length} pontos relevantes: ${nomes}. `;
-
+      const nomes = elementos.map((e) => e.nome.toLowerCase()).join(", ");
+      narrativa = `Foram identificados ${elementos.length} elementos-chave: ${nomes}. `;
       if (conexoes.length > 0) {
-        narrativa += `As ligações observadas entre os elementos indicam dinâmica provável do ocorrido.`;
+        narrativa += `As conexões traçadas sugerem uma possível sequência dos fatos.`;
       } else {
-        narrativa += `Nenhuma relação direta clara foi detectada entre os elementos mapeados.`;
+        narrativa += `Não foram encontradas relações explícitas entre os pontos mapeados.`;
       }
-
-      narrativa += ` A descrição sugere verificar vestígios complementares para concluir a reconstituição.`;
+      narrativa += ` Reavalie a cena para detalhes adicionais se necessário.`;
     } else {
       narrativa = "Descrição insuficiente para análise forense. Favor fornecer mais detalhes sobre a cena.";
       titulo = "Análise Inconclusiva";
