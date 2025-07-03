@@ -4,7 +4,11 @@ import { CrimeSceneForm } from "@/components/CrimeSceneForm";
 import { CrimeSceneVisualization } from "@/components/CrimeSceneVisualization";
 import { VoiceNarrator } from "@/components/VoiceNarrator";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
-import { Shield, Brain, Eye, Sparkles } from "lucide-react";
+import { ScenePreview } from "@/components/ScenePreview";
+import { GuidedTour } from "@/components/GuidedTour";
+import { SceneFilters } from "@/components/SceneFilters";
+import { Shield, Brain, Eye, Sparkles, HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export interface SceneElement {
@@ -32,12 +36,17 @@ export interface CrimeSceneData {
 
 const Index = () => {
   const [sceneData, setSceneData] = useState<CrimeSceneData | null>(null);
+  const [previewData, setPreviewData] = useState<CrimeSceneData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const handleSceneGeneration = async (description: string) => {
     setIsLoading(true);
     setSceneData(null);
+    setShowPreview(false);
     
     try {
       // Simulate AI cognitive processing stages
@@ -50,16 +59,14 @@ const Index = () => {
       setProcessingStage("Mapeando conexões...");
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      setProcessingStage("Construindo visualização...");
+      setProcessingStage("Construindo pré-visualização...");
       await new Promise(resolve => setTimeout(resolve, 400));
       
       const generatedScene = interpretCrimeScene(description);
-      setSceneData(generatedScene);
       
-      toast.success("Reconstituição forense concluída", {
-        description: `${generatedScene.elementos.length} elementos identificados com precisão`,
-        duration: 4000,
-      });
+      // Show preview first
+      setPreviewData(generatedScene);
+      setShowPreview(true);
       
     } catch (error) {
       console.error("Erro ao processar cena:", error);
@@ -70,6 +77,29 @@ const Index = () => {
     } finally {
       setIsLoading(false);
       setProcessingStage("");
+    }
+  };
+
+  const handlePreviewApproval = () => {
+    if (previewData) {
+      setSceneData(previewData);
+      setShowPreview(false);
+      
+      toast.success("Reconstituição forense concluída", {
+        description: `${previewData.elementos.length} elementos identificados com precisão`,
+        duration: 4000,
+      });
+    }
+  };
+
+  const handlePreviewEdit = (elementos: SceneElement[], conexoes: SceneConnection[]) => {
+    if (previewData) {
+      const updatedData = {
+        ...previewData,
+        elementos,
+        conexoes
+      };
+      setPreviewData(updatedData);
     }
   };
 
@@ -141,6 +171,10 @@ const Index = () => {
     return { elementos, conexoes, narrativa, titulo };
   };
 
+  const handleFilterChange = (filters: string[]) => {
+    setActiveFilters(filters);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
       {/* Ambient Background Effects */}
@@ -149,7 +183,6 @@ const Index = () => {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      {/* Neural Network Background */}
       <div className="absolute inset-0 opacity-5">
         <svg className="w-full h-full" viewBox="0 0 1000 1000">
           <defs>
@@ -161,7 +194,7 @@ const Index = () => {
         </svg>
       </div>
 
-      {/* Header */}
+      {/* Enhanced Header */}
       <header className="relative z-10 bg-slate-900/70 backdrop-blur-xl border-b border-slate-700/50 sticky top-0">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
@@ -180,6 +213,15 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTour(true)}
+                className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Como usar
+              </Button>
               <div className="flex items-center space-x-2 px-3 py-2 bg-green-500/10 rounded-full border border-green-500/20">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="text-green-300 text-sm font-medium">Sistema Ativo</span>
@@ -213,6 +255,18 @@ const Index = () => {
               )}
             </div>
 
+            {/* Preview Section */}
+            {showPreview && previewData && (
+              <ScenePreview
+                elementos={previewData.elementos}
+                conexoes={previewData.conexoes}
+                confidence={0.87} // Simulated confidence
+                onApprove={handlePreviewApproval}
+                onEdit={handlePreviewEdit}
+              />
+            )}
+
+            {/* Narrative Section */}
             {sceneData && (
               <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/30 shadow-2xl animate-in slide-in-from-bottom-8 duration-700">
                 <div className="flex items-center space-x-3 mb-6">
@@ -247,12 +301,19 @@ const Index = () => {
                 )}
               </div>
               
+              {/* Filters */}
+              {sceneData && (
+                <div className="mb-6">
+                  <SceneFilters onFilterChange={handleFilterChange} />
+                </div>
+              )}
+              
               {isLoading ? (
                 <div className="flex items-center justify-center h-96">
                   <LoadingAnimation stage={processingStage} />
                 </div>
               ) : sceneData ? (
-                <CrimeSceneVisualization data={sceneData} />
+                <CrimeSceneVisualization data={sceneData} activeFilters={activeFilters} />
               ) : (
                 <div className="flex items-center justify-center h-96">
                   <div className="text-center">
@@ -266,7 +327,7 @@ const Index = () => {
                       Aguardando Análise
                     </h3>
                     <p className="text-slate-500 max-w-md mx-auto">
-                      Descreva a cena criminal para iniciar a reconstituição forense inteligente
+                      Escolha o método de entrada para iniciar a reconstituição forense inteligente
                     </p>
                   </div>
                 </div>
@@ -290,6 +351,9 @@ const Index = () => {
           </p>
         </div>
       </footer>
+
+      {/* Guided Tour */}
+      <GuidedTour isOpen={showTour} onClose={() => setShowTour(false)} />
     </div>
   );
 };
