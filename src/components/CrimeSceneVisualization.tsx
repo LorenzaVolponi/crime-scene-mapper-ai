@@ -55,9 +55,23 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
     setSelectedElement(selectedElement === elementName ? null : elementName);
   };
 
+  const elementOrder: Record<string, number> = {
+    corpo: 1,
+    arma: 2,
+    sangue: 3,
+  };
+  const sortedElements = [...data.elementos].sort(
+    (a, b) => (elementOrder[a.tipo] ?? 10) - (elementOrder[b.tipo] ?? 10)
+  );
+  const sortedConnections = [...data.conexoes].sort((a, b) => {
+    const aIdx = sortedElements.findIndex(el => el.nome === a.de);
+    const bIdx = sortedElements.findIndex(el => el.nome === b.de);
+    return aIdx - bIdx;
+  });
+
   return (
     <TooltipProvider>
-      <div className="relative w-full h-[500px] bg-gradient-to-br from-slate-900/60 to-slate-800/60 rounded-2xl border border-slate-700/40 overflow-hidden backdrop-blur-sm">
+      <div className="relative w-full h-[350px] md:h-[500px] bg-gradient-to-br from-slate-900/60 to-slate-800/60 rounded-2xl border border-slate-700/40 overflow-hidden backdrop-blur-sm">
         {/* Enhanced Grid Background */}
         <div 
           className="absolute inset-0 opacity-15"
@@ -121,9 +135,9 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
           </defs>
 
           {/* Enhanced Connections with Curved Paths */}
-          {animationPhase >= 2 && data.conexoes.map((conexao, index) => {
-            const elementoOrigem = data.elementos.find(el => el.nome === conexao.de);
-            const elementoDestino = data.elementos.find(el => el.nome === conexao.para);
+          {animationPhase >= 2 && sortedConnections.map((conexao, index) => {
+            const elementoOrigem = sortedElements.find(el => el.nome === conexao.de);
+            const elementoDestino = sortedElements.find(el => el.nome === conexao.para);
             
             if (!elementoOrigem || !elementoDestino) return null;
 
@@ -132,7 +146,13 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
             const controlY = midY - 30;
 
             return (
-              <g key={`conexao-${index}`}>
+              <g
+                key={`conexao-${index}`}
+                style={{
+                  opacity: animationPhase >= 2 ? 1 : 0,
+                  transition: `opacity 0.6s ${index * 0.3}s`
+                }}
+              >
                 {/* Curved Connection Path */}
                 <path
                   d={`M ${elementoOrigem.posicao[0]} ${elementoOrigem.posicao[1]} Q ${midX} ${controlY} ${elementoDestino.posicao[0]} ${elementoDestino.posicao[1]}`}
@@ -165,12 +185,23 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
                     path={`M ${elementoOrigem.posicao[0]} ${elementoOrigem.posicao[1]} Q ${midX} ${controlY} ${elementoDestino.posicao[0]} ${elementoDestino.posicao[1]}`}
                   />
                 </circle>
+
+                {/* Connection Label */}
+                <text
+                  x={midX}
+                  y={controlY - 6}
+                  textAnchor="middle"
+                  className="fill-slate-300 text-xs font-medium"
+                  style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.6))' }}
+                >
+                  {conexao.descricao}
+                </text>
               </g>
             );
           })}
 
           {/* Enhanced Elements */}
-          {data.elementos.map((elemento, index) => {
+          {sortedElements.map((elemento, index) => {
             const isHovered = hoveredElement === elemento.nome;
             const isSelected = selectedElement === elemento.nome;
             const elementSize = getElementSize(elemento.tipo);
@@ -184,9 +215,10 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
                     onMouseLeave={() => setHoveredElement(null)}
                     onClick={() => handleElementClick(elemento.nome)}
                     style={{
-                      transform: animationPhase >= 1 ? 'scale(1)' : 'scale(0)',
+                      transform: animationPhase >= 1 ? 'scale(1)' : 'scale(0.8)',
+                      opacity: animationPhase >= 1 ? 1 : 0,
                       transformOrigin: `${elemento.posicao[0]}px ${elemento.posicao[1]}px`,
-                      transition: `transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 0.15}s`
+                      transition: `opacity 0.6s ${index * 0.15}s, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 0.15}s`
                     }}
                   >
                     {/* Outer Glow Ring */}
@@ -278,9 +310,10 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
                   <div className="p-2">
                     <p className="font-bold text-white text-base mb-1">{elemento.nome}</p>
                     <p className="text-slate-300 text-sm leading-relaxed">{elemento.tooltip}</p>
+                    <p className="text-slate-400 text-xs mt-1">{elemento.classificacao}</p>
                     <div className="flex items-center mt-2 pt-2 border-t border-slate-700">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
+                      <div
+                        className="w-3 h-3 rounded-full mr-2"
                         style={{ backgroundColor: elemento.cor }}
                       />
                       <span className="text-xs text-slate-400 capitalize">{elemento.tipo}</span>
@@ -291,27 +324,6 @@ export const CrimeSceneVisualization = ({ data }: CrimeSceneVisualizationProps) 
             );
           })}
         </svg>
-
-        {/* Enhanced Legend */}
-        <div className="absolute bottom-6 left-6 bg-slate-900/80 backdrop-blur-xl rounded-xl p-4 border border-slate-600/50 shadow-2xl max-w-xs">
-          <h4 className="text-white text-sm font-bold mb-3 flex items-center space-x-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-            <span>Elementos Identificados</span>
-          </h4>
-          <div className="space-y-2 text-xs max-h-32 overflow-y-auto">
-            {data.elementos.map((elemento, index) => (
-              <div key={index} className="flex items-center space-x-3 py-1">
-                <div
-                  className="w-3 h-3 rounded-full shadow-sm"
-                  style={{ backgroundColor: elemento.cor }}
-                />
-                <span className="text-slate-300 font-medium flex-1">{elemento.nome}</span>
-                <span className="text-slate-500 text-xs capitalize">{elemento.tipo}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Enhanced Status Panel */}
         <div className="absolute top-6 right-6 bg-slate-900/80 backdrop-blur-xl rounded-xl p-4 border border-slate-600/50 shadow-2xl">
           <div className="text-right space-y-1">

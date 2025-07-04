@@ -39,6 +39,7 @@ export const ScenePreview = ({ elementos, conexoes, confidence, onApprove, onEdi
       posicao: [Math.random() * 400 + 100, Math.random() * 300 + 100],
       tooltip: `${newElementName} adicionado manualmente`,
       tipo: 'personalizado',
+      classificacao: 'Evidência complementar',
       icone: 'box'
     };
     

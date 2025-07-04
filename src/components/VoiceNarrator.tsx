@@ -1,19 +1,21 @@
 
-import { useState } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, Play, Pause, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 interface VoiceNarratorProps {
   text: string;
+  autoPlay?: boolean;
 }
 
-export const VoiceNarrator = ({ text }: VoiceNarratorProps) => {
+export const VoiceNarrator = forwardRef<{ speak: () => void }, VoiceNarratorProps>(
+  ({ text, autoPlay }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
 
-  const speakText = () => {
+  const speakText = useCallback(() => {
     if (!('speechSynthesis' in window)) {
       toast.error("Narração por voz não suportada neste navegador", {
         description: "Use Chrome, Firefox ou Safari para melhor compatibilidade"
@@ -93,7 +95,17 @@ export const VoiceNarrator = ({ text }: VoiceNarratorProps) => {
     };
 
     window.speechSynthesis.speak(utterance);
-  };
+  }, [text, isMuted, isPlaying, currentUtterance]);
+
+  useImperativeHandle(ref, () => ({
+    speak: speakText
+  }));
+
+  useEffect(() => {
+    if (autoPlay) {
+      speakText();
+    }
+  }, [text, autoPlay, speakText]);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
@@ -178,4 +190,6 @@ export const VoiceNarrator = ({ text }: VoiceNarratorProps) => {
       </div>
     </div>
   );
-};
+});
+
+VoiceNarrator.displayName = "VoiceNarrator";

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CrimeSceneForm } from "@/components/CrimeSceneForm";
 import { CrimeSceneVisualization } from "@/components/CrimeSceneVisualization";
 import { VoiceNarrator } from "@/components/VoiceNarrator";
@@ -7,9 +7,12 @@ import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { ScenePreview } from "@/components/ScenePreview";
 import { GuidedTour } from "@/components/GuidedTour";
 import { SceneFilters } from "@/components/SceneFilters";
-import { Shield, Brain, Eye, Sparkles, HelpCircle } from "lucide-react";
+import { SceneElementsList } from "@/components/SceneElementsList";
+import { Shield, Brain, Eye, Sparkles, HelpCircle, Menu, X } from "lucide-react";
+import { generatePdf } from "@/lib/generatePdf";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 export interface SceneElement {
   nome: string;
@@ -17,6 +20,7 @@ export interface SceneElement {
   posicao: [number, number];
   tooltip: string;
   tipo: string;
+  classificacao: string;
   icone: string;
 }
 
@@ -41,7 +45,28 @@ const Index = () => {
   const [processingStage, setProcessingStage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const visualizationRef = useRef<HTMLDivElement>(null);
+  const narratorRef = useRef<{ speak: () => void }>(null);
+  useLockBodyScroll(mobileMenuOpen);
+
+  // Close mobile menu on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
 
   const handleSceneGeneration = async (description: string) => {
     setIsLoading(true);
@@ -104,67 +129,122 @@ const Index = () => {
   };
 
   const interpretCrimeScene = (description: string): CrimeSceneData => {
-    // Advanced scene interpretation logic
     const elementos: SceneElement[] = [];
     const conexoes: SceneConnection[] = [];
     let narrativa = "";
     let titulo = "Cena Criminal Analisada";
 
-    // Normalize text
     const text = description.toLowerCase();
-    
-    // Element detection patterns
+
     const patterns = [
-      { keywords: ['corpo', 'cadáver', 'vítima', 'morto'], tipo: 'corpo', cor: '#1e90ff', icone: 'user' },
-      { keywords: ['arma', 'pistola', 'revólver', 'faca', 'facão'], tipo: 'arma', cor: '#dc143c', icone: 'zap' },
-      { keywords: ['sangue', 'mancha', 'poça'], tipo: 'sangue', cor: '#8b0000', icone: 'droplet' },
-      { keywords: ['pegada', 'pisada', 'rastro'], tipo: 'pegada', cor: '#8b4513', icone: 'footprints' },
-      { keywords: ['porta', 'janela', 'entrada'], tipo: 'acesso', cor: '#4a5568', icone: 'door' },
-      { keywords: ['mesa', 'cadeira', 'sofá', 'móvel'], tipo: 'mobilia', cor: '#2d3748', icone: 'box' },
-      { keywords: ['cozinha', 'banheiro', 'quarto', 'sala'], tipo: 'comodo', cor: '#4a5568', icone: 'home' }
+      { keywords: ["corpo", "cadáver", "vítima", "morto"], tipo: "corpo", cor: "#1e90ff", icone: "user" },
+      { keywords: ["arma", "pistola", "revólver", "faca", "facão"], tipo: "arma", cor: "#dc143c", icone: "zap" },
+      { keywords: ["sangue", "mancha", "poça"], tipo: "sangue", cor: "#8b0000", icone: "droplet" },
+      { keywords: ["pegada", "pisada", "rastro"], tipo: "pegada", cor: "#8b4513", icone: "footprints" },
+      { keywords: ["porta", "janela", "entrada"], tipo: "acesso", cor: "#4a5568", icone: "door" },
+      { keywords: ["mesa", "cadeira", "sofá", "móvel"], tipo: "mobilia", cor: "#2d3748", icone: "box" },
+      { keywords: ["cozinha", "banheiro", "quarto", "sala"], tipo: "comodo", cor: "#4a5568", icone: "home" }
     ];
 
-    // Generate elements based on text analysis
-    patterns.forEach((pattern, index) => {
-      const found = pattern.keywords.some(keyword => text.includes(keyword));
-      if (found) {
-        const baseX = Math.random() * 400 + 100;
-        const baseY = Math.random() * 300 + 100;
-        
+    const directions: Record<string, [number, number]> = {
+      esquerda: [150, 250],
+      direita: [550, 250],
+      centro: [350, 250],
+      frente: [350, 150],
+      atras: [350, 400],
+      norte: [350, 150],
+      sul: [350, 400],
+      leste: [550, 250],
+      oeste: [150, 250]
+    };
+
+    const classifyElement = (tipo: string): string => {
+      if (["corpo", "arma"].includes(tipo)) return "Evidência principal";
+      if (tipo === "acesso") return "Rota de fuga sugerida";
+      if (["sangue", "pegada"].includes(tipo)) return "Ponto de rastro";
+      return "Evidência complementar";
+    };
+
+    patterns.forEach((pattern) => {
+      if (pattern.keywords.some((k) => text.includes(k))) {
+        let pos: [number, number] = [Math.random() * 300 + 200, Math.random() * 200 + 150];
+        let tooltip = `${pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1)} identificado`;
+        Object.entries(directions).forEach(([dir, coords]) => {
+          if (text.includes(`${dir} ${pattern.tipo}`) || text.includes(`${pattern.tipo} ${dir}`)) {
+            pos = coords;
+            tooltip += ` na região ${dir}`;
+          }
+        });
+
+        let classificacao = classifyElement(pattern.tipo);
+        if (["corpo", "arma"].includes(pattern.tipo) && ["disparo", "tiro", "confronto", "luta"].some(k => text.includes(k))) {
+          classificacao = "Ponto crítico de confronto";
+        }
+
         elementos.push({
           nome: pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1),
           cor: pattern.cor,
-          posicao: [baseX, baseY],
-          tooltip: `${pattern.tipo.charAt(0).toUpperCase() + pattern.tipo.slice(1)} encontrado na cena`,
+          posicao: pos,
+          tooltip,
           tipo: pattern.tipo,
+          classificacao,
           icone: pattern.icone
         });
       }
     });
 
-    // Generate connections based on spatial relationships
-    if (elementos.length > 1) {
-      for (let i = 0; i < elementos.length - 1; i++) {
-        if (Math.random() > 0.5) { // 50% chance of connection
-          conexoes.push({
-            de: elementos[i].nome,
-            para: elementos[i + 1].nome,
-            cor: '#ff4500',
-            descricao: `Relação espacial entre ${elementos[i].nome} e ${elementos[i + 1].nome}`
-          });
+    const connectionRules = [
+      { trigger: ["disparo", "tiro"], from: "arma", to: "corpo", desc: "trajetória provável do disparo" },
+      { trigger: ["rastro", "pegada"], from: "corpo", to: "acesso", desc: "possível rota de fuga" },
+      { trigger: ["sangue", "mancha"], from: "corpo", to: "sangue", desc: "aproximação de vestígios sanguíneos" }
+    ];
+
+    connectionRules.forEach((rule) => {
+      if (rule.trigger.some((k) => text.includes(k))) {
+        const origem = elementos.find((e) => e.tipo === rule.from);
+        const destino = elementos.find((e) => e.tipo === rule.to);
+        if (origem && destino) {
+          conexoes.push({ de: origem.nome, para: destino.nome, cor: "#ff4500", descricao: rule.desc });
         }
+      }
+    });
+
+    if (conexoes.length === 0 && elementos.length > 1) {
+      for (let i = 0; i < elementos.length - 1; i++) {
+        conexoes.push({
+          de: elementos[i].nome,
+          para: elementos[i + 1].nome,
+          cor: "#ff4500",
+          descricao: `Ligação observada entre ${elementos[i].nome} e ${elementos[i + 1].nome}`
+        });
       }
     }
 
-    // Generate narrative
     if (elementos.length > 0) {
-      narrativa = `Análise forense identificou ${elementos.length} elementos principais na cena. `;
-      elementos.forEach((elemento, index) => {
-        narrativa += `${elemento.nome} localizado em posição estratégica${index < elementos.length - 1 ? ', ' : '. '}`;
-      });
-      narrativa += `As evidências sugerem um padrão investigativo que requer análise detalhada.`;
+      const detalhesElementos = elementos
+        .map(
+          (e) =>
+            `${e.nome} (${e.classificacao}) em (${Math.round(e.posicao[0])}, ${Math.round(
+              e.posicao[1]
+            )})`
+        )
+        .join("; ");
+
+      narrativa = `Foram identificados ${elementos.length} elementos: ${detalhesElementos}. `;
+
+      if (conexoes.length > 0) {
+        const detalhesConexoes = conexoes
+          .map((c) => `${c.de} → ${c.para} (${c.descricao})`)
+          .join("; ");
+        narrativa += `Foram mapeadas ${conexoes.length} conexões: ${detalhesConexoes}.`;
+      } else {
+        narrativa += `Nenhuma relação direta foi encontrada entre os elementos.`;
+      }
+
+      narrativa += " Esses dados subsidiam uma reconstituição visual precisa da cena.";
     } else {
-      narrativa = "Descrição insuficiente para análise forense. Favor fornecer mais detalhes sobre a cena.";
+      narrativa =
+        "Descrição insuficiente para análise forense. Favor fornecer mais detalhes sobre a cena.";
       titulo = "Análise Inconclusiva";
     }
 
@@ -197,7 +277,7 @@ const Index = () => {
       {/* Enhanced Header */}
       <header className="relative z-10 bg-slate-900/70 backdrop-blur-xl border-b border-slate-700/50 sticky top-0">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Shield className="h-10 w-10 text-blue-400 drop-shadow-lg" />
@@ -212,7 +292,7 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="hidden sm:flex items-center space-x-6">
               <Button
                 variant="ghost"
                 size="sm"
@@ -231,12 +311,60 @@ const Index = () => {
                 <span className="text-sm font-medium">IA Avançada</span>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(true)}
+              className="sm:hidden text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
 
+      {mobileMenuOpen && (
+        <div
+          className="sm:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex justify-end"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            className="relative bg-slate-900 w-64 p-6 space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              aria-label="Fechar menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <Button
+              variant="ghost"
+              className="justify-start text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 w-full"
+              onClick={() => {
+                setShowTour(true);
+                setMobileMenuOpen(false);
+              }}
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Como usar
+            </Button>
+            <div className="flex items-center space-x-2 px-3 py-2 bg-green-500/10 rounded-full border border-green-500/20">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-green-300 text-sm font-medium">Sistema Ativo</span>
+            </div>
+            <div className="flex items-center space-x-2 text-slate-300">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+              <span className="text-sm font-medium">IA Avançada</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="relative z-10 container mx-auto px-6 py-12">
+      <main className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
           {/* Left Panel */}
           <div className="space-y-8">
@@ -277,7 +405,7 @@ const Index = () => {
                 </div>
                 <div className="space-y-4">
                   <p className="text-slate-300 leading-relaxed text-lg">{sceneData.narrativa}</p>
-                  <VoiceNarrator text={sceneData.narrativa} />
+                  <VoiceNarrator ref={narratorRef} text={sceneData.narrativa} />
                 </div>
               </div>
             )}
@@ -286,7 +414,7 @@ const Index = () => {
           {/* Right Panel */}
           <div className="space-y-8">
             <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/30 shadow-2xl min-h-[600px]">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-green-500/10 rounded-lg">
                     <Eye className="h-6 w-6 text-green-400" />
@@ -294,9 +422,23 @@ const Index = () => {
                   <h2 className="text-2xl font-bold text-white">Reconstituição Visual</h2>
                 </div>
                 {sceneData && (
-                  <div className="text-right text-sm text-slate-400">
-                    <p className="font-medium">{sceneData.elementos.length} elementos</p>
-                    <p>{sceneData.conexoes.length} conexões</p>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right text-sm text-slate-400">
+                      <p className="font-medium">{sceneData.elementos.length} elementos</p>
+                      <p>{sceneData.conexoes.length} conexões</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (sceneData && visualizationRef.current) {
+                          generatePdf(sceneData, visualizationRef.current);
+                        }
+                      }}
+                      className="text-blue-400 border-blue-400 hover:bg-blue-500/10"
+                    >
+                      Baixar PDF
+                    </Button>
                   </div>
                 )}
               </div>
@@ -313,7 +455,10 @@ const Index = () => {
                   <LoadingAnimation stage={processingStage} />
                 </div>
               ) : sceneData ? (
-                <CrimeSceneVisualization data={sceneData} activeFilters={activeFilters} />
+                <div ref={visualizationRef}>
+                  <CrimeSceneVisualization data={sceneData} activeFilters={activeFilters} />
+                  <SceneElementsList elements={sceneData.elementos} />
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-96">
                   <div className="text-center">
